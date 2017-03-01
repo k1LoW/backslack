@@ -52,8 +52,8 @@ Webhook URL: `https://x0x1x2x3x.execute-api.ap-northeast-1.amazonaws.com/v0/hook
 
 #### URL Query Parameters
 
-| Key         | Value                      | Example                    |
-| ------------|:---------------------------|:---------------------------|
-| space    | [Backlog space id](http://www.backlog.jp/faq/service/what-id.html) | `myspace` |
-| webhook_url | Slack incoming webhook URL | `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX` |
-| channel     | Slack channel              | `general` |
+| Key                    | Value                      | Example                    |
+| -----------------------|:---------------------------|:---------------------------|
+| space (required)       | [Backlog space id](http://www.backlog.jp/faq/service/what-id.html) | `myspace` |
+| webhook_url (required) | Slack incoming webhook URL | `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX` |
+| channel                | Slack channel              | `general` |
