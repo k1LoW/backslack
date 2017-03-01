@@ -13,8 +13,8 @@ const types = {
     9: '共有ファイルを更新',
     10: '共有ファイルを削除',
     11: 'Subversionコミット',
-    12: 'GITプッシュ',
-    13: 'GITリポジトリ作成',
+    12: 'Gitプッシュ',
+    13: 'Gitリポジトリ作成',
     14: '課題をまとめて更新',
     15: 'プロジェクトに参加',
     16: 'プロジェクトから脱退',
@@ -32,16 +32,16 @@ module.exports.hook = (event, context, callback) => {
     console.log(event);
     console.log(context);
 
-    const webhookUrl = event.queryStringParameters && event.queryStringParameters.hasOwnProperty('webhook_url') ? event.queryStringParameters.webhook_url : null;
     const space = event.queryStringParameters && event.queryStringParameters.hasOwnProperty('space') ? event.queryStringParameters.space : null;
+    const webhookUrl = event.queryStringParameters && event.queryStringParameters.hasOwnProperty('webhook_url') ? event.queryStringParameters.webhook_url : null;
     const channel = event.queryStringParameters && event.queryStringParameters.hasOwnProperty('channel') ? '#' + event.queryStringParameters.channel : '#general';
     const username = event.queryStringParameters && event.queryStringParameters.hasOwnProperty('username') ? event.queryStringParameters.username : 'backslack';
-    
-    if (!webhookUrl) {
+
+    if (!space || !webhookUrl) {
         const response = {
             statusCode: 400,
             body: JSON.stringify({
-                message: 'Invalid argument'
+                message: 'Invalid argument. `space` and `webhook_url` is required'
             })
         };
         callback(null, response);
@@ -71,13 +71,37 @@ module.exports.hook = (event, context, callback) => {
     }
     if (body.content.hasOwnProperty('key_id')) {
         title = '[' + prefix + '-' + body.content.key_id + '] ' + title;
-        if (space) {
-            title_link = 'https://' + space + '.backlog.jp/view/' + prefix + '-' + body.content.key_id;
+        title_link = 'https://' + space + '.backlog.jp/view/' + prefix + '-' + body.content.key_id;
+    }
+
+    // マイルストーン
+    if ([22,23,24].some(function(v) { return v == type; })) {
+        if (body.content.hasOwnProperty('name') && body.content.name != '') {
+            fields.push(
+                {
+                    title: 'マイルストーン',
+                    value: body.content.name,
+                    short: false
+                }
+            );
         }
     }
     
-    // 3. 課題にコメント
-    if (type == 3) {
+    // 詳細
+    if ([1,2,4,18,19,22,23].some(function(v) { return v == type; })) {
+        if (body.content.hasOwnProperty('description') && body.content.description != '') {
+            fields.push(
+                {
+                    title: '詳細',
+                    value: body.content.description,
+                    short: false
+                }
+            );
+        }
+    }
+    
+    // コメント
+    if ([2, 3, 17].some(function(v) { return v == type; })) {
         if (body.content.hasOwnProperty('comment') && body.content.comment.content != '') {
             fields.push(
                 {
@@ -87,19 +111,82 @@ module.exports.hook = (event, context, callback) => {
                 }
             );
         }
-        if (space) {
-            text = 'https://' + space + '.backlog.jp/view/' + prefix + '-' + body.content.key_id + '#comment-' + body.content.comment.id;
+        text = 'https://' + space + '.backlog.jp/view/' + prefix + '-' + body.content.key_id + '#comment-' + body.content.comment.id;
+    }
+
+    // Wiki
+    if ([5,6,7].some(function(v) { return v == type; })) {
+        if (body.content.hasOwnProperty('name') && body.content.name != '') {
+            fields.push(
+                {
+                    title: 'Wiki',
+                    value: body.content.name,
+                    short: false
+                }
+            );
         }
     }
 
-    // 1,2,4 課題の*    
-    if ([1,2,4].some(function(v) { return v == type; })) { 
-        if (body.content.hasOwnProperty('description') && body.content.description != '') {
+    // 共有ファイル
+    if ([8,9,10].some(function(v) { return v == type; })) {
+        if (body.content.hasOwnProperty('name') && body.content.name != '') {
             fields.push(
                 {
-                    title: '詳細',
-                    value: body.content.description,
+                    title: '共有ファイル',
+                    value: body.content.name,
                     short: false
+                }
+            );
+        }
+    }
+
+    // Subversion
+    if ([11].some(function(v) { return v == type; })) {
+        if (body.content.hasOwnProperty('rev') && body.content.rev != '') {
+            fields.push(
+                {
+                    title: 'リビジョン',
+                    value: body.content.rev,
+                    short: true
+                }
+            );
+        }
+        if (body.content.hasOwnProperty('comment') && body.content.comment != '') {
+            fields.push(
+                {
+                    title: 'コメント',
+                    value: body.content.comment,
+                    short: false
+                }
+            );
+        }        
+    }
+
+    // Git
+    if ([12,13,18,19,20,21].some(function(v) { return v == type; })) {
+        
+        if (body.content.hasOwnProperty('repository')) {
+            fields.push(
+                {
+                    title: 'リポジトリ',
+                    value: body.content.repository.name,
+                    short: true
+                }
+            );
+        }
+    }
+
+    // プロジェクト参加
+    if ([15,16].some(function(v) { return v == type; })) {
+        const users = body.content.users.map(function(v) {
+            return v.name;
+        }).join(', ');
+        if (body.content.hasOwnProperty('users')) {
+            fields.push(
+                {
+                    title: 'ユーザ',
+                    value: users,
+                    short: true
                 }
             );
         }
@@ -125,6 +212,32 @@ module.exports.hook = (event, context, callback) => {
         );
     }
 
+    if (body.content.hasOwnProperty('versions')) {
+        const versions = body.content.versions.map(function(v) {
+            return v.name;
+        }).join(', ');
+        fields.push(
+            {
+                title: '発生バージョン',
+                value: versions,
+                short: true
+            }
+        );
+    }
+    
+    if (body.content.hasOwnProperty('category')) {
+        const category = body.content.category.map(function(v) {
+            return v.name;
+        }).join(', ');
+        fields.push(
+            {
+                title: 'カテゴリー',
+                value: category,
+                short: true
+            }
+        );
+    }
+
     if (body.content.hasOwnProperty('milestone')) {
         const milestone = body.content.milestone.map(function(v) {
             return v.name;
@@ -137,8 +250,8 @@ module.exports.hook = (event, context, callback) => {
             }
         );
     }
-    
-    if (body.content.hasOwnProperty('assignee')) {
+
+    if (body.content.hasOwnProperty('assignee') && body.content.assignee) {
         fields.push(
             {
                 title: '担当者',
@@ -147,7 +260,7 @@ module.exports.hook = (event, context, callback) => {
             }
         );
     }
-    
+
     // Slack
     let data = {
         channel: channel,
@@ -173,7 +286,7 @@ module.exports.hook = (event, context, callback) => {
             const response = {
                 statusCode: 200,
                 body: JSON.stringify({
-                    message: 'Successfully!'
+                    message: 'Success!'
                 })
             };
             callback(null, response);
@@ -187,7 +300,4 @@ module.exports.hook = (event, context, callback) => {
             };
             callback(null, response);
         });
-    
-    // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-    // callback(null, { message: 'Go Serverless v1.0! Your function executed successfully!', event });
 };

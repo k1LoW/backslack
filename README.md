@@ -1,12 +1,15 @@
 # backslack
 
-Backlog webhook -> Slack incoming webhook
+Bridge between [Backlog](http://www.backlog.jp/help/adminsguide/webhook-setting/userguide2493.html) and [Slack](https://api.slack.com/incoming-webhooks)
+
+![img](ss.png)
 
 ## Usage
 
 ### 1. Deploy backslack
 
 ```
+$ yarn
 $ AWS_PROFILE=XXxxxxX $(npm bin)/sls deploy
 ```
 
@@ -45,12 +48,12 @@ https://api.slack.com/incoming-webhooks
 
 http://www.backlog.jp/help/adminsguide/webhook-setting/userguide2496.html
 
-Webhook URL: `https://x0x1x2x3x.execute-api.ap-northeast-1.amazonaws.com/v0/hook?webhook_url=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX&space=mybacklogspace&channel=general`
+Webhook URL: `https://x0x1x2x3x.execute-api.ap-northeast-1.amazonaws.com/v0/hook?space=myspace&webhook_url=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX&channel=general`
 
 #### URL Query Parameters
 
 | Key         | Value                      | Example                    |
 | ------------|:---------------------------|:---------------------------|
+| space    | [Backlog space id](http://www.backlog.jp/faq/service/what-id.html) | `myspace` |
 | webhook_url | Slack incoming webhook URL | `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX` |
 | channel     | Slack channel              | `general` |
-| space       | Backlog space              | `myspace` |
