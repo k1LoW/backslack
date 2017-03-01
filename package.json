@@ -1,0 +1,20 @@
+{
+    "name": "backslack",
+    "version": "0.1.0",
+    "description": "Backlog webhook -> Slack incoming webhook",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "backlog",
+        "slack",
+        "serverless"
+    ],
+    "author": "k1LoW",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^0.15.3",
+        "serverless": "^1.7.0"
+    }
+}
