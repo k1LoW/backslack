@@ -1,10 +1,10 @@
 service: backslack
 
-frameworkVersion: "=1.7.0"
+frameworkVersion: ">=1.17.0 <2.0.0"
 
 provider:
   name: aws
-  runtime: nodejs4.3
+  runtime: nodejs6.10
   stage: v0
   region: ap-northeast-1
   cfLogs: true
